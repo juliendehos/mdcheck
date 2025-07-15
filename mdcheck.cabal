@@ -1,0 +1,12 @@
+cabal-version:          3.0
+name:                   mdcheck
+version:                0.0.1
+
+executable mdcheck
+  hs-source-dirs:       src
+  main-is:              Main.hs
+  -- other-modules:        FFI 
+  build-depends:        base, cmark, directory
+  default-language:     GHC2021
+  ghc-options:          -Wall -O2
+
