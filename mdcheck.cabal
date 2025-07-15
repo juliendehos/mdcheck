@@ -6,7 +6,7 @@ executable mdcheck
   hs-source-dirs:       src
   main-is:              Main.hs
   -- other-modules:        FFI 
-  build-depends:        base, cmark, directory
+  build-depends:        base, cmark, turtle
   default-language:     GHC2021
   ghc-options:          -Wall -O2
 
