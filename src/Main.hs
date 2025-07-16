@@ -1,8 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import CMark
-import Control.Monad (forM_)
-import Data.List (foldl')
+import Data.List (foldl', (\\))
 import Data.Text qualified as T
 import Data.Text.IO qualified as T
 import Prelude hiding (FilePath)
@@ -35,24 +34,27 @@ nodeToImages = go []
     go acc (Node _ (IMAGE url _) ns) = normalise (T.unpack url) : foldl' go acc ns
     go acc (Node _ _ ns) = foldl' go acc ns
 
+imagesInFile :: FilePath -> IO [FilePath]
+imagesInFile = fmap (nodeToImages . commonmarkToNode []) . T.readFile
+
 main :: IO ()
 main = do
   basedir <- options "Check images in markdown files" parser
   cd basedir
 
   mds <- getMds
-  files <- getFiles "files"
-  dots <- getFilesSvg "dot"
-  tex <- getFilesSvg "tex"
-  umls <- getFilesSvg "uml"
+  mdImages <- concat <$> traverse imagesInFile mds
 
-  forM_ mds $ \md -> do
-    print md
-    input <- T.readFile md
-    let node = commonmarkToNode [] input
-        imgs = nodeToImages node
-    mapM_ putStrLn imgs
+  images <- concat <$> sequence 
+    [ getFiles "files"
+    , getFilesSvg "dot"
+    , getFilesSvg "tex"
+    , getFilesSvg "uml"
+    ]
 
-  
-  pure ()
+  putStrLn "\n*** not found ***"
+  mapM_ putStrLn $ mdImages \\ images
+
+  putStrLn "\n*** unused ***"
+  mapM_ putStrLn $ images \\ mdImages
 
