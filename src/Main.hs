@@ -1,12 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import CMark
-import Data.List (foldl', (\\))
+import Control.Monad (forM_)
+import Data.List (foldl', (\\), nub)
 import Data.Text qualified as T
 import Data.Text.IO qualified as T
 import Prelude hiding (FilePath)
 import System.FilePath (normalise)
-import Turtle
+import Turtle hiding (nub)
 
 parser :: Parser FilePath
 parser = argPath "basedir"  "Base directory to check"
@@ -35,7 +36,7 @@ nodeToImages = go []
     go acc (Node _ _ ns) = foldl' go acc ns
 
 imagesInFile :: FilePath -> IO [FilePath]
-imagesInFile = fmap (nodeToImages . commonmarkToNode []) . T.readFile
+imagesInFile = fmap (nub . nodeToImages . commonmarkToNode []) . T.readFile
 
 main :: IO ()
 main = do
@@ -43,18 +44,23 @@ main = do
   cd basedir
 
   mds <- getMds
-  mdImages <- concat <$> traverse imagesInFile mds
+  mdImages <- traverse imagesInFile mds
 
-  images <- concat <$> sequence 
+  images <- nub . concat <$> sequence 
     [ getFiles "files"
     , getFilesSvg "dot"
     , getFilesSvg "tex"
     , getFilesSvg "uml"
     ]
 
-  putStrLn "\n*** not found ***"
-  mapM_ putStrLn $ mdImages \\ images
-
   putStrLn "\n*** unused ***"
-  mapM_ putStrLn $ images \\ mdImages
+  mapM_ putStrLn $ images \\ concat mdImages
+
+  putStrLn "\n*** not found ***"
+  forM_ (zip mds mdImages) $ \(md, mdImage) -> 
+    forM_ (mdImage \\ images) $ \img ->
+      putStrLn $ md ++ " -> " ++ img
+
+  -- print mdImages
+  -- print images
 
