@@ -51,7 +51,7 @@ main = do
   images <- nub . sort . concat <$> sequence 
     [ getFiles "images"
     , getFilesSvg "dot"
-    , getFilesSvg "tex"
+    , getFilesSvg "tikz"
     , getFilesSvg "uml"
     ]
 
