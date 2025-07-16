@@ -9,8 +9,10 @@ import Prelude hiding (FilePath)
 import System.FilePath (normalise)
 import Turtle hiding (nub)
 
-parser :: Parser FilePath
-parser = argPath "basedir"  "Base directory to check"
+parser :: Parser (Bool, FilePath)
+parser = (,)
+  <$> switch "unused" 'u' "Check unused images instead of missing images"
+  <*> argPath "basedir" "Base directory to check"
 
 shellToList :: Fold a [a]
 shellToList = Fold (\ys y -> ys++[y]) [] id
@@ -40,7 +42,7 @@ imagesInFile = fmap (nub . nodeToImages . commonmarkToNode []) . T.readFile
 
 main :: IO ()
 main = do
-  basedir <- options "Check images in markdown files" parser
+  (unused, basedir) <- options "Check images in markdown files" parser
   cd basedir
 
   mds <- getMds
@@ -53,13 +55,13 @@ main = do
     , getFilesSvg "uml"
     ]
 
-  putStrLn "\n*** unused ***"
-  mapM_ putStrLn $ images \\ concat mdImages
-
-  putStrLn "\n*** not found ***"
-  forM_ (zip mds mdImages) $ \(md, mdImage) -> 
-    forM_ (mdImage \\ images) $ \img ->
-      putStrLn $ md ++ " -> " ++ img
+  if unused
+  then 
+    mapM_ putStrLn $ images \\ concat mdImages
+  else
+    forM_ (zip mds mdImages) $ \(md, mdImage) -> 
+      forM_ (mdImage \\ images) $ \img ->
+        putStrLn $ md ++ " -> " ++ img
 
   -- print mdImages
   -- print images
