@@ -2,12 +2,12 @@
 
 import CMark
 import Control.Monad (forM_)
-import Data.List (foldl', (\\), nub)
+import Data.List (foldl', (\\), nub, sort)
 import Data.Text qualified as T
 import Data.Text.IO qualified as T
 import Prelude hiding (FilePath)
 import System.FilePath (normalise)
-import Turtle hiding (nub)
+import Turtle hiding (nub, sort)
 
 parser :: Parser (Bool, FilePath)
 parser = (,)
@@ -48,8 +48,8 @@ main = do
   mds <- getMds
   mdImages <- traverse imagesInFile mds
 
-  images <- nub . concat <$> sequence 
-    [ getFiles "files"
+  images <- nub . sort . concat <$> sequence 
+    [ getFiles "images"
     , getFilesSvg "dot"
     , getFilesSvg "tex"
     , getFilesSvg "uml"
